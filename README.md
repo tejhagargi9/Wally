@@ -1,1 +1,1 @@
-***Wally - Wallpaper App using React Native
+Wally - Wallpaper App using React Native
