@@ -62,7 +62,7 @@ const styles = StyleSheet.create({
   },
   crossContainer : {
     backgroundColor : "white",
-    borderRadius : "50%"
+    borderRadius : 50
 ,  },
   wallpaperPreview: {
     width: '100%', // Full width of bottom sheet
