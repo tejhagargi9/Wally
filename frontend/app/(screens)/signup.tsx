@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Text, TextInput, View, TouchableOpacity, StyleSheet, ImageBackground, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import axios from 'axios';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const Signup = () => {
   const [username, setUsername] = useState('');
@@ -30,6 +31,9 @@ const Signup = () => {
       });
 
       console.log('Signup successful:', response.data);
+      AsyncStorage.setItem('isFirstTimeUser', 'false');
+      AsyncStorage.setItem('email', email);
+      AsyncStorage.setItem('username', username)  
       Alert.alert('Success', 'Signup successful');
       router.push('(tabs)');  // Navigate to login screen after successful signup
     } catch (error) {
