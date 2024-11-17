@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Image, StyleSheet, Pressable } from 'react-native';
 import { Wallpaper } from '@/hooks/useWallpaper';
 import { ThemedText } from './ThemedText';
@@ -6,10 +6,16 @@ import { Ionicons } from '@expo/vector-icons';
 import useLikedWallpaper from '@/hooks/useLikedWallpaper';
 
 const ImageCard = ({ wallpaper, onPress }: { wallpaper: Wallpaper; onPress: any }) => {
-  const { toggleLike, isLiked } = useLikedWallpaper();
+  const { likedWallpapers, addLikedWallpaper, removeLikedWallpaper } = useLikedWallpaper();
+  const [isLiked, setIsLiked] = useState(false);
 
-  const handleLikePress = () => {
-    toggleLike(wallpaper);
+  const handleLikeToggle = () => {
+    setIsLiked(!isLiked);
+    if (isLiked) {
+      removeLikedWallpaper(wallpaper);
+    } else {
+      addLikedWallpaper(wallpaper);
+    }
   };
 
   return (
@@ -18,11 +24,11 @@ const ImageCard = ({ wallpaper, onPress }: { wallpaper: Wallpaper; onPress: any 
         <Image style={styles.image} source={{ uri: wallpaper.url }} />
         <View style={styles.mainContainer}>
           <ThemedText style={styles.name}>{wallpaper.name}</ThemedText>
-          <Pressable onPress={handleLikePress}>
+          <Pressable onPress={handleLikeToggle}>
             <Ionicons
               name="heart"
               size={18}
-              color={isLiked(wallpaper) ? 'red' : 'white'}
+              color={isLiked ? 'red' : 'white'} // Toggle between red and white based on the like status
             />
           </Pressable>
         </View>

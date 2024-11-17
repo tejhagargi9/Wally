@@ -1,24 +1,23 @@
-import { useState, useCallback } from 'react';
-import { Wallpaper } from '@/hooks/useWallpaper';
+import React, { useState, useCallback } from 'react';
 
 const useLikedWallpaper = () => {
-  const [likedWallpapers, setLikedWallpapers] = useState<Wallpaper[]>([]);
+  const [likedWallpapers, setLikedWallpapers] = React.useState([]);
 
-  const toggleLike = useCallback((wallpaper: Wallpaper) => {
-    setLikedWallpapers((prevLiked) => {
-      const isLiked = prevLiked.some((wp) => wp.url === wallpaper.url);
-      if (isLiked) {
-        return prevLiked.filter((wp) => wp.url !== wallpaper.url); // Remove from liked
+  const toggleLike = (wallpaper) => {
+    setLikedWallpapers((prev) => {
+      if (prev.find((item) => item.url === wallpaper.url)) {
+        // Remove from liked
+        return prev.filter((item) => item.url !== wallpaper.url);
       } else {
-        return [...prevLiked, wallpaper]; // Add to liked
+        // Add to liked
+        return [...prev, wallpaper];
       }
     });
-  }, []);
+  };
 
-  const isLiked = useCallback(
-    (wallpaper: Wallpaper) => likedWallpapers.some((wp) => wp.url === wallpaper.url),
-    [likedWallpapers]
-  );
+  const isLiked = (wallpaper) => {
+    return likedWallpapers.some((item) => item.url === wallpaper.url);
+  };
 
   return { likedWallpapers, toggleLike, isLiked };
 };

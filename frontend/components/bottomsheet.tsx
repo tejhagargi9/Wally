@@ -3,36 +3,42 @@ import { View, Text, TouchableOpacity, Alert, StyleSheet, Image } from 'react-na
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import * as FileSystem from 'expo-file-system';
 import * as MediaLibrary from 'expo-media-library';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const DownloadPicture = ({ wallpaper, onClose }) => {
-  
-  const   handleDownload = async () => {
+  const saveDownloadedWallpaper = async (uri, name) => {
     try {
-      // Request permission to access the media library (for both Android and iOS)
+      const existingData = await AsyncStorage.getItem('downloadedWallpapers');
+      const wallpapers = existingData ? JSON.parse(existingData) : [];
+      wallpapers.push({ uri, name });
+      await AsyncStorage.setItem('downloadedWallpapers', JSON.stringify(wallpapers));
+    } catch (error) {
+      console.error('Error saving wallpaper:', error);
+    }
+  };
+
+  const handleDownload = async () => {
+    try {
       const permission = await MediaLibrary.requestPermissionsAsync();
       if (!permission.granted) {
         Alert.alert('Permission Denied', 'You need to grant media library permissions to save the wallpaper.');
         return;
       }
 
-      // Download the wallpaper to a local path
-      const downloadPath = FileSystem.documentDirectory + `${wallpaper.name}.jpg`;  // Temporary file path
-      const { uri } = await FileSystem.downloadAsync(wallpaper.url, downloadPath);  // Download the image
+      const downloadPath = FileSystem.documentDirectory + `${wallpaper.name}.jpg`;
+      const { uri } = await FileSystem.downloadAsync(wallpaper.url, downloadPath);
 
-      // Create an asset from the downloaded file
       const asset = await MediaLibrary.createAssetAsync(uri);
 
-      // Check if the "Download" album exists, otherwise create it
       let album = await MediaLibrary.getAlbumAsync('Download');
       if (!album) {
-        // Create a new album if it doesn't exist
         album = await MediaLibrary.createAlbumAsync('Download', asset, false);
       } else {
-        // Add the downloaded wallpaper to the existing album
         await MediaLibrary.addAssetsToAlbumAsync([asset], album.id, false);
       }
 
-      // Show a success message
+      await saveDownloadedWallpaper(uri, wallpaper.name);  // Save wallpaper to AsyncStorage
+
       Alert.alert('Download Complete', 'The wallpaper has been saved to your gallery!');
     } catch (error) {
       console.error('Error downloading the wallpaper:', error);
@@ -73,7 +79,7 @@ const DownloadPicture = ({ wallpaper, onClose }) => {
 
 const styles = StyleSheet.create({
   contentContainer: {
-    width: "100%",
+    width: "100vw",
     flex: 1,
     padding: 0,
     alignItems: 'center',
