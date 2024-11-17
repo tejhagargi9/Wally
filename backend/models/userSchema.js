@@ -18,6 +18,13 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  wallpaperUrls: [{ 
+    type: String 
+  }],
+  profilePhotoUrl : {
+    default: 'https://cdn-icons-png.flaticon.com/128/10398/10398223.png',
+    type : String
+  }
 }, { timestamps: true }); // Adds createdAt and updatedAt timestamps
 
 const User = mongoose.model('User', userSchema);
