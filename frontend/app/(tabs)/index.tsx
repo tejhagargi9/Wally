@@ -1,17 +1,25 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { SafeAreaView, StyleSheet, Image, View } from 'react-native';
+import { Searchbar } from 'react-native-paper'; // Import Searchbar from react-native-paper
 import ParallaxScrollView from '@/components/ParallaxScrollView';
 import useWallpaper from '@/hooks/useWallpaper';
 import ImageCard from '@/components/ImageCard';
 import { FlatList } from 'react-native-gesture-handler';
 import BottomSheet, { BottomSheetMethods } from '@gorhom/bottom-sheet';
 import DownloadPicture from '@/components/bottomsheet';
-
+import { useFocusEffect } from 'expo-router';
 
 const Index = () => {
-  const wallpapers = useWallpaper();
+  const [searchQuery, setSearchQuery] = useState('');
+  const { wallpapers, refetch } = useWallpaper(searchQuery); // Pass search query to the hook
   const [selectedWallpaper, setSelectedWallpaper] = useState(null);
   const bottomSheetRef = useRef<BottomSheetMethods | null>(null);
+
+  useFocusEffect(
+    useCallback(() => {
+      refetch(); // Re-fetch wallpapers when the tab is focused
+    }, [refetch])
+  );
 
   const handleOpenBottomSheet = (wallpaper) => {
     setSelectedWallpaper(wallpaper); 
@@ -20,7 +28,7 @@ const Index = () => {
 
   const handleCloseBottomSheet = () => {
     setSelectedWallpaper(null);
-    bottomSheetRef.current?.close(); // Close the bottom sheet
+    bottomSheetRef.current?.close();
   };
 
   useEffect(() => {
@@ -36,6 +44,15 @@ const Index = () => {
         headerBackgroundColor={{ dark: 'black', light: 'white' }}
       >
         <View style={styles.container}>
+          {/* Aesthetic Search Bar */}
+          <Searchbar
+            placeholder="Search wallpapers..."
+            onChangeText={setSearchQuery}
+            value={searchQuery}
+            icon="magnify"
+            style={styles.searchBar}
+          />
+
           <FlatList
             data={wallpapers}
             renderItem={({ item }) => (
@@ -59,7 +76,7 @@ const Index = () => {
         index={-1}
         backgroundStyle={styles.bottomSheetBackground}
         onClose={handleCloseBottomSheet}
-        handleComponent={null}  // Removes the notch
+        handleComponent={null}
       >
         {selectedWallpaper && (
           <DownloadPicture wallpaper={selectedWallpaper} onClose={handleCloseBottomSheet} />
@@ -68,8 +85,6 @@ const Index = () => {
     </SafeAreaView>
   );
 };
-
-export default Index;
 
 const styles = StyleSheet.create({
   container: {
@@ -86,4 +101,13 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
     borderRadius: 20,
   },
+  searchBar: {
+    marginBottom: 16,
+    backgroundColor: 'black', // Slightly transparent background for aesthetics
+    borderRadius: 12,
+    color: '#49454F',
+    elevation: 4, // To add a shadow effect
+    placeholderTextColor: '#49454F'  },
 });
+
+export default Index;

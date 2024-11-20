@@ -1,102 +1,58 @@
-import React from 'react';
-import { SafeAreaView, StyleSheet, View } from 'react-native';
-import { FlatList } from 'react-native-gesture-handler';
-import useLikedWallpaper from '@/hooks/useLikedWallpaper';
+import React, { useState, useEffect, useCallback } from 'react';
+import { FlatList, View, Text, StyleSheet } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import ImageCard from '@/components/ImageCard';
-import BottomSheet, { BottomSheetMethods } from '@gorhom/bottom-sheet';
-import DownloadPicture from '@/components/bottomsheet';
-import { ThemedText } from '@/components/ThemedText';
+import { useFocusEffect } from 'expo-router';
 
-const Liked = () => {
-  const { likedWallpapers } = useLikedWallpaper(); // Access the liked wallpapers
-  const [selectedWallpaper, setSelectedWallpaper] = React.useState(null);
-  const bottomSheetRef = React.useRef<BottomSheetMethods | null>(null);
+const LikedTab = () => {
+  const [likedWallpapers, setLikedWallpapers] = useState([]);
 
-  // Open Bottom Sheet when a wallpaper is selected
-  const handleOpenBottomSheet = (wallpaper) => {
-    setSelectedWallpaper(wallpaper);
-    bottomSheetRef.current?.expand();
-  };
-
-  // Close Bottom Sheet
-  const handleCloseBottomSheet = () => {
-    setSelectedWallpaper(null);
-    bottomSheetRef.current?.close();
-  };
-
-  // Ensure Bottom Sheet closes when `selectedWallpaper` changes
-  React.useEffect(() => {
-    if (!selectedWallpaper) {
-      bottomSheetRef.current?.close();
+  // Fetch liked wallpapers from AsyncStorage
+  const fetchLikedWallpapers = async () => {
+    try {
+      const likedWallpapers = await AsyncStorage.getItem('likedWallpapers');
+      setLikedWallpapers(likedWallpapers ? JSON.parse(likedWallpapers) : []);
+    } catch (error) {
+      console.error('Error fetching liked wallpapers:', error);
     }
-  }, [selectedWallpaper]);
+  };
+
+  // Refresh liked wallpapers when the tab is opened or re-rendered
+  useFocusEffect(
+    useCallback(() => {
+        fetchLikedWallpapers()
+    }, [fetchLikedWallpapers])
+  )
 
   return (
-    <SafeAreaView style={{ flex: 1 }}>
-      <View style={styles.container}>
-        {likedWallpapers.length > 0 ? (
-          <FlatList
-            data={likedWallpapers}
-            renderItem={({ item }) => (
-              <View style={styles.imageContainer}>
-                <ImageCard
-                  onPress={() => handleOpenBottomSheet(item)}
-                  wallpaper={item}
-                />
-              </View>
-            )}
-            keyExtractor={(item) => item.name}
-            numColumns={2}
-          />
-        ) : (
-          <View style={styles.noLikedContainer}>
-            <ThemedText style={styles.noLikedText}>No Liked Wallpapers</ThemedText>
-          </View>
-        )}
-      </View>
-
-      {/* Bottom Sheet for Actions */}
-      <BottomSheet
-        ref={bottomSheetRef}
-        snapPoints={["100%"]}
-        enablePanDownToClose
-        index={-1}
-        backgroundStyle={styles.bottomSheetBackground}
-        onClose={handleCloseBottomSheet}
-        handleComponent={null} // Removes the notch
-      >
-        {selectedWallpaper && (
-          <DownloadPicture wallpaper={selectedWallpaper} onClose={handleCloseBottomSheet} />
-        )}
-      </BottomSheet>
-    </SafeAreaView>
+    <View style={styles.container}>
+      {likedWallpapers.length === 0 ? (
+        <Text style={styles.emptyText}>No liked wallpapers yet.</Text>
+      ) : (
+        <FlatList
+          data={likedWallpapers}
+          keyExtractor={(item) => item.url}
+          renderItem={({ item }) => (
+            <ImageCard wallpaper={item} refreshLikedWallpapers={fetchLikedWallpapers} />
+          )}
+        />
+      )}
+    </View>
   );
 };
 
-export default Liked;
+export default LikedTab;
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingHorizontal: 4,
-    paddingVertical: 8,
+    padding: 16,
+    backgroundColor: '#121212',
   },
-  imageContainer: {
-    flex: 1,
-    margin: 4,
-    maxWidth: '50%', // Adjusts for two-column layout
-  },
-  noLikedContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  noLikedText: {
-    fontSize: 16,
-    color: 'gray',
-  },
-  bottomSheetBackground: {
-    backgroundColor: 'white',
-    borderRadius: 20,
+  emptyText: {
+    color: '#fff',
+    textAlign: 'center',
+    marginTop: 20,
+    fontSize: 18,
   },
 });
